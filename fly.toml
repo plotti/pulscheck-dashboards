@@ -1,0 +1,19 @@
+# fly.toml app configuration file
+# PulsCheck Dashboards – statische Evidence-Site hinter nginx.
+app = 'pulscheck-dashboards'
+# zrh nimmt aktuell keine Maschinen an – fra ist die nächstgelegene Region
+primary_region = 'fra'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '256mb'

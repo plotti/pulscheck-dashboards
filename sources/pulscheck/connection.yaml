@@ -1,0 +1,4 @@
+name: pulscheck
+type: duckdb
+options:
+  filename: pulscheck.duckdb

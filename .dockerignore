@@ -1,0 +1,5 @@
+# Build-Kontext schlank halten: nur der fertige Static-Build und die nginx-Config
+# gehören ins Image.
+*
+!build
+!nginx.conf
