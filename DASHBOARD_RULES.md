@@ -23,8 +23,9 @@ Verwende ausschliesslich diese Komponenten:
 
 - `BigValue`, `LineChart`, `BarChart`, `AreaChart`, `ScatterPlot`
 - `DataTable`, `Column` (innerhalb von DataTable)
-- `Heatmap`, `Histogram`
+- `Heatmap`, `Histogram`, `CalendarHeatmap` (Tageswerte über ein Jahr; braucht `date`- und `value`-Spalte)
 - `Dropdown`, `DropdownOption` (für Filter)
+- `DimensionGrid` (klickbarer Cross-Filter über eine VARCHAR-Dimension; setzt `name` als fertiges WHERE-Fragment, konsumiert via `where ${inputs.<name>}` – nicht `.value`)
 - `Details`, `Alert`, `Tabs` (Layout-Helfer)
 
 **NICHT verwenden** (Claude erfindet diese gelegentlich – sie existieren nicht):

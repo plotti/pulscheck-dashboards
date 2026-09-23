@@ -76,17 +76,48 @@ order by revenue_chf desc
   <Column id=share_pct title='Anteil (%)' fmt='0.0' />
 </DataTable>
 
+## Paketgrösse wählen
+
+Klicken Sie eine Paketgrösse an, um den Umsatz-Trend und die Top-Käufer:innen darunter auf diese Grösse einzugrenzen. Ohne Auswahl werden alle Grössen gezeigt. Die Kacheln respektieren den Länder-Filter oben.
+
+```sql pkg_base
+select
+  p.package_size as paket,
+  p.price_chf
+from pulscheck.response_packages p
+join pulscheck.customers c on c.id = p.customer_id
+where p.purchased_at >= '2026-02-01 00:00:00+01:00'
+  and p.purchased_at <  '2026-05-01 00:00:00+02:00'
+  and c.country like '${inputs.country.value}'
+```
+
+<DimensionGrid
+  data={pkg_base}
+  name=pkgsize
+  metric='sum(price_chf)'
+  metricLabel='CHF'
+  fmt='#,##0'
+  title='Paketgrösse als Filter'
+/>
+
 ## Monatlicher Umsatz-Trend
 
 ```sql revenue_trend
 select
-  date_trunc('month', cast(p.purchased_at as timestamp)) as month,
-  p.package_size,
-  round(sum(p.price_chf), 2) as revenue_chf
-from pulscheck.response_packages p
-join pulscheck.customers c on c.id = p.customer_id
-where p.purchased_at >= '2025-05-01 00:00:00+02:00'
-  and c.country like '${inputs.country.value}'
+  month,
+  paket as package_size,
+  round(sum(price), 2) as revenue_chf
+from (
+  select
+    date_trunc('month', cast(p.purchased_at as timestamp)) as month,
+    p.package_size as paket,
+    p.price_chf as price
+  from pulscheck.response_packages p
+  join pulscheck.customers c on c.id = p.customer_id
+  where p.purchased_at >= '2025-05-01 00:00:00+02:00'
+    and c.country like '${inputs.country.value}'
+)
+where ${inputs.pkgsize}
 group by 1, 2
 order by 1, 2
 ```
@@ -104,15 +135,23 @@ order by 1, 2
 
 ```sql top_customers
 select
-  c.country,
-  c.email,
+  country,
+  email,
   count(*) as packages_bought,
-  round(sum(p.price_chf), 2) as total_chf
-from pulscheck.response_packages p
-join pulscheck.customers c on c.id = p.customer_id
-where p.purchased_at >= '2026-02-01 00:00:00+01:00'
-  and p.purchased_at <  '2026-05-01 00:00:00+02:00'
-  and c.country like '${inputs.country.value}'
+  round(sum(price), 2) as total_chf
+from (
+  select
+    c.country as country,
+    c.email as email,
+    p.package_size as paket,
+    p.price_chf as price
+  from pulscheck.response_packages p
+  join pulscheck.customers c on c.id = p.customer_id
+  where p.purchased_at >= '2026-02-01 00:00:00+01:00'
+    and p.purchased_at <  '2026-05-01 00:00:00+02:00'
+    and c.country like '${inputs.country.value}'
+)
+where ${inputs.pkgsize}
 group by 1, 2
 order by total_chf desc
 limit 20

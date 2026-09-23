@@ -49,41 +49,71 @@ select
   title='Ø Antwortdauer (Sek.)'
 />
 
-## Antworten pro Sprache
+## Antwort-Aktivität im Jahresverlauf
 
-Die Verteilung der Antworten nach Befragungssprache zeigt, wo Ihre Reichweite real liegt – unabhängig davon, in welchen Märkten Ihre Kund:innen ihren Sitz haben. Im typischen DACH-Setup dominiert Deutsch; Französisch und Italienisch finden sich vor allem in der Westschweiz und im Tessin.
+Jeder Tag als Kachel: So werden Saisonalität, Wochenend-Einbrüche und Kampagnen-Spitzen auf einen Blick sichtbar. Gezählt werden abgeschlossene Antworten (`is_complete = true`) über die zwölf Monate bis zum Stichtag.
 
-```sql responses_by_language
+```sql daily_responses
 select
-  s.language,
+  cast(r.completed_at as date) as day,
   count(*) as responses
+from pulscheck.survey_responses r
+where r.is_complete = true
+  and r.completed_at >= '2025-05-01 00:00:00+02:00'
+  and r.completed_at <  '2026-05-01 00:00:00+02:00'
+group by 1
+order by 1
+```
+
+<CalendarHeatmap
+  data={daily_responses}
+  date=day
+  value=responses
+  valueFmt='#,##0'
+  title='Abgeschlossene Antworten pro Tag'
+  subtitle='Mai 2025 – April 2026 · Europe/Zurich'
+/>
+
+## Nach Sprache filtern
+
+Klicken Sie eine Befragungssprache an, um Geografie und aktivste Befragungen darunter auf diese Sprache einzugrenzen – ohne Auswahl bleiben alle Sprachen enthalten. Die Kacheln zeigen zugleich, wo Ihre Reichweite real liegt: Im typischen DACH-Setup dominiert Deutsch; Französisch und Italienisch finden sich vor allem in der Westschweiz und im Tessin.
+
+```sql lang_base
+select
+  s.language as sprache
 from pulscheck.survey_responses r
 join pulscheck.surveys s on s.id = r.survey_id
 where r.is_complete = true
   and r.completed_at >= '2026-04-01 00:00:00+02:00'
   and r.completed_at <  '2026-05-01 00:00:00+02:00'
-group by 1
-order by responses desc
 ```
 
-<BarChart
-  data={responses_by_language}
-  x=language
-  y=responses
-  title='Antworten nach Befragungssprache (April 2026)'
-  yFmt='#,##0'
+<DimensionGrid
+  data={lang_base}
+  name=lang
+  metric='count(*)'
+  metricLabel='Antw.'
+  fmt='#,##0'
+  title='Befragungssprache als Filter'
 />
 
 ## Geografie der Antwortenden (April 2026)
 
 ```sql responses_by_country
 select
-  r.respondent_country as country,
+  country,
   count(*) as responses
-from pulscheck.survey_responses r
-where r.is_complete = true
-  and r.completed_at >= '2026-04-01 00:00:00+02:00'
-  and r.completed_at <  '2026-05-01 00:00:00+02:00'
+from (
+  select
+    r.respondent_country as country,
+    s.language as sprache
+  from pulscheck.survey_responses r
+  join pulscheck.surveys s on s.id = r.survey_id
+  where r.is_complete = true
+    and r.completed_at >= '2026-04-01 00:00:00+02:00'
+    and r.completed_at <  '2026-05-01 00:00:00+02:00'
+)
+where ${inputs.lang}
 group by 1
 order by responses desc
 limit 15
@@ -130,13 +160,21 @@ order by min(response_duration_seconds)
 
 ```sql top_surveys
 select
-  s.title,
-  s.language,
-  s.status,
-  count(r.id) as response_count
-from pulscheck.surveys s
-left join pulscheck.survey_responses r
-  on r.survey_id = s.id and r.is_complete = true
+  title,
+  sprache as language,
+  status,
+  count(response_id) as response_count
+from (
+  select
+    s.title as title,
+    s.language as sprache,
+    s.status as status,
+    r.id as response_id
+  from pulscheck.surveys s
+  left join pulscheck.survey_responses r
+    on r.survey_id = s.id and r.is_complete = true
+)
+where ${inputs.lang}
 group by 1, 2, 3
 order by response_count desc
 limit 10
