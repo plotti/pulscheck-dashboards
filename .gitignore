@@ -8,3 +8,5 @@ static/data
 .vscode/
 .env
 memory/
+.dive-preview/.env
+.dive-preview/node_modules/
