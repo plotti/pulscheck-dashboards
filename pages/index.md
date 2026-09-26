@@ -48,6 +48,7 @@ select
 
 ## Dashboards
 
+- [**Product Metrics Dive**](/product_metrics_dive) – Interaktive Gesamtansicht mit Zeitfenster-Filter (Dive-Stil)
 - [**Subscription Health**](/subscription_health) – MRR-Verlauf, Plan-Verteilung, Cohort-Retention
 - [**Response Package Sales**](/package_sales) – Paket-Umsatz nach Grösse und Land
 - [**Survey Engagement**](/survey_engagement) – Aktive Befragungen, Sprachverteilung, Geo-Reichweite
